@@ -15,10 +15,24 @@ export function createServerSupabase() {
           return cookieStore.get(name)?.value;
         },
         set(name: string, value: string, options: any) {
-          cookieStore.set({ name, value, ...options });
+          // Next.js melarang penulisan cookie di luar Server Action /
+          // Route Handler. Saat dipanggil dari Server Component biasa
+          // (mis. app/page.tsx saat auto-refresh token Supabase berjalan),
+          // panggilan ini akan melempar error — kita abaikan di sini
+          // karena middleware.ts yang bertanggung jawab me-refresh
+          // session dan menulis cookie yang sebenarnya.
+          try {
+            cookieStore.set({ name, value, ...options });
+          } catch {
+            // no-op: aman diabaikan di dalam Server Component
+          }
         },
         remove(name: string, options: any) {
-          cookieStore.set({ name, value: "", ...options });
+          try {
+            cookieStore.set({ name, value: "", ...options });
+          } catch {
+            // no-op: aman diabaikan di dalam Server Component
+          }
         },
       },
     }
